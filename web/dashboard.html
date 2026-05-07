@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UWB Positioning Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-stopped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .stat {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .position-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        
+        .anchor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .anchor-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .anchor-id {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .anchor-pos {
+            font-size: 12px;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .refresh-info {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+        
+        .log-entry {
+            padding: 3px 0;
+            border-bottom: 1px solid #eee;
+            color: #666;
+        }
+        
+        .log-entry.error {
+            color: #dc3545;
+        }
+        
+        .log-entry.success {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛰️ UWB Indoor Positioning System</h1>
+            <p class="subtitle">Real-time Multi-Anchor Position Tracking Dashboard</p>
+        </header>
+        
+        <div class="grid">
+            <!-- System Control -->
+            <div class="card">
+                <h2>System Control</h2>
+                <div style="margin-bottom: 10px;">
+                    <span class="status-badge" id="status-badge">
+                        Disconnected
+                    </span>
+                </div>
+                <button class="btn btn-primary" onclick="startSystem()">Start System</button>
+                <button class="btn btn-danger" onclick="stopSystem()">Stop System</button>
+                <div class="stat" style="margin-top: 15px;">
+                    <span class="stat-label">Status:</span>
+                    <span class="stat-value" id="status-text">Stopped</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Update Rate:</span>
+                    <span class="stat-value" id="update-rate">-- Hz</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Last Update:</span>
+                    <span class="stat-value" id="last-update">--:--:--</span>
+                </div>
+            </div>
+            
+            <!-- System Status -->
+            <div class="card">
+                <h2>System Status</h2>
+                <div class="stat">
+                    <span class="stat-label">Connected Anchors:</span>
+                    <span class="stat-value" id="num-anchors">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Active Tags:</span>
+                    <span class="stat-value" id="num-tags">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Avg Position Quality:</span>
+                    <span class="stat-value" id="avg-quality">--%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Avg Residual:</span>
+                    <span class="stat-value" id="avg-residual">--</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Uptime:</span>
+                    <span class="stat-value" id="uptime">00:00:00</span>
+                </div>
+            </div>
+            
+            <!-- Current Positions -->
+            <div class="card">
+                <h2>Current Positions</h2>
+                <div id="positions-display">
+                    <p style="color: #999;">No data available</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Anchors -->
+        <div class="card">
+            <h2>Anchor Configuration</h2>
+            <div class="anchor-grid" id="anchors-display">
+                <p style="color: #999;">Loading...</p>
+            </div>
+        </div>
+        
+        <!-- 3D Visualization -->
+        <div class="card">
+            <h2>3D Position Visualization</h2>
+            <canvas id="canvas3d"></canvas>
+            <p class="refresh-info">Updating every 1000ms...</p>
+        </div>
+        
+        <!-- System Log -->
+        <div class="card">
+            <h2>System Log</h2>
+            <div class="log" id="log-display"></div>
+        </div>
+    </div>
+    
+    <script>
+        let systemRunning = false;
+        let lastUpdateTime = Date.now();
+        let startTime = null;
+        const logEntries = [];
+        const maxLogEntries = 50;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logEntries.unshift({ timestamp, message, type });
+            if (logEntries.length > maxLogEntries) logEntries.pop();
+            updateLog();
+        }
+        
+        function updateLog() {
+            const logDiv = document.getElementById('log-display');
+            logDiv.innerHTML = logEntries.map(entry => 
+                `<div class="log-entry ${entry.type}">[${entry.timestamp}] ${entry.message}</div>`
+            ).join('');
+        }
+        
+        async function startSystem() {
+            try {
+                const response = await fetch('/api/system/start', { method: 'POST' });
+                if (response.ok) {
+                    systemRunning = true;
+                    startTime = Date.now();
+                    updateSystemStatus();
+                    log('System started', 'success');
+                } else {
+                    log('Failed to start system', 'error');
+                }
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+            }
+        }
+        
+        async function stopSystem() {
+            try {
+                const response = await fetch('/api/system/stop', { method: 'POST' });
+                if (response.ok) {
+                    systemRunning = false;
+                    updateSystemStatus();
+                    log('System stopped', 'success');
+                } else {
+                    log('Failed to stop system', 'error');
+                }
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+            }
+        }
+        
+        async function updateSystemStatus() {
+            try {
+                const response = await fetch('/api/system/status');
+                const data = await response.json();
+                
+                systemRunning = data.running;
+                document.getElementById('status-text').textContent = systemRunning ? 'Running' : 'Stopped';
+                document.getElementById('status-badge').className = systemRunning ? 
+                    'status-badge status-running' : 'status-badge status-stopped';
+                document.getElementById('status-badge').textContent = systemRunning ? 'Running' : 'Stopped';
+                
+                document.getElementById('num-anchors').textContent = data.num_anchors;
+                document.getElementById('num-tags').textContent = data.num_tags;
+                
+                if (startTime) {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    const hours = Math.floor(elapsed / 3600);
+                    const minutes = Math.floor((elapsed % 3600) / 60);
+                    const seconds = elapsed % 60;
+                    document.getElementById('uptime').textContent = 
+                        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
+            } catch (e) {
+                log(`Status update failed: ${e.message}`, 'error');
+            }
+        }
+        
+        async function updatePositions() {
+            try {
+                const response = await fetch('/api/positions');
+                const positions = await response.json();
+                
+                const display = document.getElementById('positions-display');
+                if (Object.keys(positions).length > 0) {
+                    display.innerHTML = Object.entries(positions).map(([tagId, data]) => `
+                        <div class="stat">
+                            <span class="stat-label"><strong>${tagId}</strong></span>
+                            <span class="stat-value">${formatPosition(data.filtered_position || data.raw_position)}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    display.innerHTML = '<p style="color: #999;">No positions available</p>';
+                }
+                
+                lastUpdateTime = Date.now();
+                document.getElementById('last-update').textContent = new Date(lastUpdateTime).toLocaleTimeString();
+            } catch (e) {
+                // Silent fail
+            }
+        }
+        
+        async function updateAnchors() {
+            try {
+                const response = await fetch('/api/anchors');
+                const anchors = await response.json();
+                
+                const display = document.getElementById('anchors-display');
+                display.innerHTML = anchors.map(anchor => `
+                    <div class="anchor-item">
+                        <div class="anchor-id">${anchor.id}</div>
+                        <div class="anchor-pos">
+                            x: ${anchor.position[0].toFixed(2)}<br>
+                            y: ${anchor.position[1].toFixed(2)}<br>
+                            z: ${anchor.position[2].toFixed(2)}
+                        </div>
+                        <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                            ${anchor.connected ? '✓ Connected' : '✗ Disconnected'}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                // Silent fail
+            }
+        }
+        
+        function formatPosition(pos) {
+            if (!pos) return 'N/A';
+            return `(${pos[0]?.toFixed(2)}, ${pos[1]?.toFixed(2)}, ${pos[2]?.toFixed(2)})`;
+        }
+        
+        function drawCanvas3D() {
+            const canvas = document.getElementById('canvas3d');
+            if (!canvas.getContext) return;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#667eea';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('3D Visualization - Real-time positioning data will appear here', 
+                         canvas.width / 2, canvas.height / 2);
+        }
+        
+        // Initial updates
+        updateAnchors();
+        updateSystemStatus();
+        updatePositions();
+        drawCanvas3D();
+        
+        // Periodic updates
+        setInterval(() => {
+            updateSystemStatus();
+            updatePositions();
+            drawCanvas3D();
+        }, 1000);
+    </script>
+</body>
+</html>
