@@ -1,0 +1,45 @@
+{
+  "system": {
+    "update_rate": 10,
+    "filter_enabled": true,
+    "debug_mode": false
+  },
+  "anchors": [
+    {
+      "id": "A1",
+      "position": [0.0, 0.0, 0.0],
+      "serial_port": "/dev/ttyUSB0"
+    },
+    {
+      "id": "A2",
+      "position": [10.0, 0.0, 0.0],
+      "serial_port": "/dev/ttyUSB1"
+    },
+    {
+      "id": "A3",
+      "position": [5.0, 8.66, 0.0],
+      "serial_port": "/dev/ttyUSB2"
+    },
+    {
+      "id": "A4",
+      "position": [5.0, 2.89, 3.0],
+      "serial_port": "/dev/ttyUSB3"
+    }
+  ],
+  "kalman_filter": {
+    "process_variance": 0.01,
+    "measurement_variance": 0.5,
+    "initial_value": 0.0,
+    "initial_estimate_error": 1.0
+  },
+  "trilateration": {
+    "min_anchors": 3,
+    "max_distance": 100.0,
+    "outlier_threshold": 2.0
+  },
+  "api": {
+    "host": "0.0.0.0",
+    "port": 5000,
+    "debug": false
+  }
+}
